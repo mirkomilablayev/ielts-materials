@@ -4,8 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import uz.english.englishmaterials.entity.Applicant;
-import uz.english.englishmaterials.entity.ApplicantRepository;
 import uz.english.englishmaterials.entity.User;
 import uz.english.englishmaterials.entity.UserRepository;
 import uz.english.englishmaterials.util.Steps;
@@ -16,7 +14,6 @@ import java.util.Optional;
 @AllArgsConstructor
 public class LogicService {
     private final UserRepository userRepository;
-    private final ApplicantRepository applicantRepository;
 
     public User createUser(Update update) {
         String realId = getRealId(update);
@@ -30,7 +27,7 @@ public class LogicService {
             user.setChatId(chatId);
             user.setRealId(realId);
             user.setFullName(tgUser.getFirstName() + (tgUser.getLastName() == null ? "" : " " + tgUser.getLastName()));
-            user.setPage(Steps.REGISTERED);
+            user.setPage(Steps.NEW);
             return userRepository.save(user);
         }
         return userOptional.get();
@@ -39,22 +36,6 @@ public class LogicService {
         userRepository.save(user);
     }
 
-    public void saveApplicant(Applicant applicant){
-        applicantRepository.save(applicant);
-    }
-
-    public void closeNotCompletedApplicant(User user){
-        for (Applicant applicant : applicantRepository.findAllByApplicantIdAndActive(user.getId(), true)) {
-            if (!applicant.getCompleted()){
-                applicant.setActive(false);
-                applicantRepository.save(applicant);
-            }
-        }
-    }
-
-    public Applicant getActiveApplicant(User user){
-        return applicantRepository.findByApplicantIdAndActiveAndCompleted(user.getId(), true, false).orElse(new Applicant());
-    }
 
 
     public String getRealId(Update update) {
